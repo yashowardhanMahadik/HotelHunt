@@ -19,7 +19,9 @@ public class HotelRouter {
                         .nest(path("/v1/hotel"),builder ->
                             builder
                                     .GET("",hotelHandler::getHotels)
-                                    .POST("",hotelHandler::addHotel))
+                                    .POST("",hotelHandler::addHotel)
+                                    .GET("/{id}",hotelHandler::getHotelById)
+                        )
 
                         .build();
     }

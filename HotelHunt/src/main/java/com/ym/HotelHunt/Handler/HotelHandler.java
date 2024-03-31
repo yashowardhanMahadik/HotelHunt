@@ -36,4 +36,11 @@ public class HotelHandler {
 
                 ).switchIfEmpty(Mono.error(new Exception("Unable to create new Hotel")));
     }
+
+    public Mono<ServerResponse> getHotelById(ServerRequest request) {
+        var id = request.pathVariable("id");
+        var hotelMono = hotelRepository.getHotelByHotelName(id)
+                .switchIfEmpty(Mono.error(new Exception("Unable to find the requested hotel")));
+        return ServerResponse.ok().body(hotelMono,Hotel.class);
+    }
 }
