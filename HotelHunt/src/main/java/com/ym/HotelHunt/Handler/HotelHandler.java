@@ -27,14 +27,22 @@ public class HotelHandler {
 
     public Mono<ServerResponse> addHotel(ServerRequest request){
         log.info("Add hotel");
-        return request.bodyToMono(Hotel.class)
-                .flatMap(hotelRepository::save)
-                .flatMap(
-                        hotel ->
-                                ServerResponse.status(HttpStatus.CREATED)
-                                        .bodyValue(hotel)
 
-                ).switchIfEmpty(Mono.error(new Exception("Unable to create new Hotel")));
+        return request.bodyToMono(Hotel.class)
+                .flatMap(hotel ->
+                     hotelRepository.findAll().collectList().map(listOfHotels ->
+                            listOfHotels.stream().filter(p -> p.getHotelName().equals(hotel.getHotelName())).findFirst().isPresent())
+                            .map(isPresent ->{
+                                if(!isPresent)
+                                    return hotel;
+                                else {
+                                    throw new RuntimeException("Duplicate hotel name");
+                                }
+                            })
+                )
+                .flatMap(hotelRepository::save)
+                .flatMap(ServerResponse.status(HttpStatus.CREATED)::bodyValue)
+                .switchIfEmpty(Mono.error(new Exception("Unable to create new Hotel")));
     }
 
     public Mono<ServerResponse> getHotelById(ServerRequest request) {

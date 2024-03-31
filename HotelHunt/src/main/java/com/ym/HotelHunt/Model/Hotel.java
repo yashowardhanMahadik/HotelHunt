@@ -5,8 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.lang.NonNull;
 
 import java.util.List;
 
@@ -19,6 +19,7 @@ public class Hotel {
     @Id
     String id;
 
+    @Indexed(name="hotelName",unique = true)
     String hotelName;
     List<Room> rooms;
     String location;
