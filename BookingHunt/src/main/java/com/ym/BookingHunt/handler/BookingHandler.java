@@ -1,5 +1,6 @@
 package com.ym.BookingHunt.handler;
 
+import com.ym.BookingHunt.exception.PaymentFailedException;
 import com.ym.BookingHunt.exception.RoomNotFoundException;
 import com.ym.BookingHunt.model.*;
 import com.ym.BookingHunt.repository.BookingRepository;
@@ -19,6 +20,9 @@ public class BookingHandler {
 
     @Autowired
     BookingRepository bookingRepository;
+
+    @Autowired
+    PaymentHandler paymentHandler;
 
     public Mono<ServerResponse> createBooking(@PathVariable("id")String id, @PathVariable("name")String name,@PathVariable("type")String type) {
 
@@ -40,8 +44,18 @@ public class BookingHandler {
                     log.info("Hotel info fetched: "+ h1);
 
                     List<Room> r1 = h1.getRooms();
-                    Optional<Room> optionalRoom = r1.stream().filter(Room::isAvailable).filter(room -> room.getType().equalsIgnoreCase(type)).findAny();
-                    return getBookingResponse(optionalRoom, u1);
+                    return paymentHandler.processPayment(new Payment("1", "1", 7000)).flatMap(status -> {
+                                if (status)
+                                    return Mono.error(new PaymentFailedException("Payment method failed, booking failed!"));
+                                else {
+
+                                    Optional<Room> optionalRoom = r1.stream().filter(Room::isAvailable).filter(room -> room.getType().equalsIgnoreCase(type)).findAny();
+                                    return getBookingResponse(optionalRoom, u1);
+                                }
+                            }
+
+                    );
+
 
                 });
     }
