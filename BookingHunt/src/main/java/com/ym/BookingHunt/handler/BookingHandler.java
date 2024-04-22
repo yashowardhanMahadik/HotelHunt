@@ -1,5 +1,7 @@
 package com.ym.BookingHunt.handler;
 
+import com.ym.BookingHunt.client.HotelClient;
+import com.ym.BookingHunt.client.UserClient;
 import com.ym.BookingHunt.exception.PaymentFailedException;
 import com.ym.BookingHunt.exception.RoomNotFoundException;
 import com.ym.BookingHunt.model.*;
@@ -24,14 +26,18 @@ public class BookingHandler {
     @Autowired
     PaymentHandler paymentHandler;
 
+    @Autowired
+    private UserClient userClient;
+
     public Mono<ServerResponse> createBooking(@PathVariable("id")String id, @PathVariable("name")String name,@PathVariable("type")String type) {
 
         //get user1 details //todo
         User user1 = User.builder().id("1").name("YAshow").address(new Address("as","Indore",Long.valueOf(123131))).build();
         Mono<User> userMono = Mono.just(user1);
+        userMono = userClient.getUser("660919b47ff34a0caf8e2320");
         //get hotel details //todo
         Hotel hotel1 = Hotel.builder().hotelName("Marquis").id("1").location("Mumbai")
-                .rooms(List.of(new Room("1","Single",false)
+                .rooms(List.of(new Room("1","Single",true)
                 ,new Room("2","Single",false)
                 ,new Room("3","Double",true))).build();
         Mono<Hotel> hotelMono = Mono.just(hotel1);
@@ -45,7 +51,7 @@ public class BookingHandler {
 
                     List<Room> r1 = h1.getRooms();
                     return paymentHandler.processPayment(new Payment("1", "1", 7000)).flatMap(status -> {
-                                if (status)
+                                if (!status)
                                     return Mono.error(new PaymentFailedException("Payment method failed, booking failed!"));
                                 else {
 
